@@ -6,7 +6,7 @@
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 TIMEOUT_LIMIT = 20
 PAGE_WAIT_RANGE = (2.0, 4.0)
-PAGES_TO_SCRAPE = 6 # Ajusta según necesidad
+PAGES_TO_SCRAPE = 6
 
 # ============================================================
 # URLs OBJETIVO
@@ -26,7 +26,7 @@ SOURCE_NAME_MAPPING = {
 }
 
 # ============================================================
-# [MEJORA 1] TÓPICOS REFINADOS + CATEGORÍA DE CONTROL
+# TÓPICOS + CATEGORÍA DE CONTROL
 # ============================================================
 TOPIC_LABELS = [
     "Accidente de tránsito o choque vial",
@@ -35,13 +35,12 @@ TOPIC_LABELS = [
     "Operativo policial o detención",
     "Protestas o bloqueos viales",
     "Noticia corporativa o regulación de transporte",
-    "Otros temas generales" # <--- LA PAPELERA MÁGICA (Sube el accuracy de los demás)
+    "Otros temas generales"
 ]
 
 # ============================================================
-# [MEJORA 2] DICCIONARIO DE KEYWORDS PARA OVERRIDE (JERARQUÍA MÁXIMA)
+# DICCIONARIO DE KEYWORDS PARA OVERRIDE (JERARQUÍA)
 # ============================================================
-# Si aparece una de estas, ignoramos a la IA y asignamos el tema directo.
 HARD_KEYWORDS = {
     "Accidente de tránsito o choque vial": [
         "choque", "volcadura", "carambola", "atropellado", "atropellamiento", 
@@ -94,10 +93,10 @@ CRITICAL_OVERRIDE_KEYWORDS = [
 # Agregar esto a src/config.py
 
 # ============================================================
-# CONFIGURACIÓN DE OKR (PPT 2025)
+# CONFIGURACIÓN
 # ============================================================
 
-# Mapeo de Tiers de medios según impacto [cite: 303-305, 405-407]
+# Mapeo de Tiers de medios según impacto
 SOURCE_TIER_MAPPING = {
     "El Universal": 3,
     "Milenio": 3,
@@ -107,14 +106,14 @@ SOURCE_TIER_MAPPING = {
     "Default": 1
 }
 
-# Pesos para el cálculo de Focus [cite: 301, 403, 459]
+# Pesos para el cálculo de Focus
 FOCUS_WEIGHTS = {
     "TITLE_MATCH": 1.0,
     "BODY_MATCH": 0.5,
     "NO_MATCH": 0.0
 }
 
-# Mapeo numérico de sentimiento [cite: 300, 402, 457]
+# Mapeo numérico de sentimiento
 SENTIMENT_NUMERIC_MAP = {
     "Positivo": 1.0,
     "Neutral": 0.0,
@@ -139,7 +138,7 @@ VIOLENCIA_ARMADA_KEYWORDS = [
     "encapuchados", "comando", "r15", "ak47", "pistola"
 ]
 
-# --- ESCALA 1-5 REFINADA ---
+# --- ESCALA 1-5 ---
 SEVERITY_MAPPING = {
     "Acoso o agresión sexual": 5,
     "Delito violento, robo o asalto": 4, 
@@ -151,5 +150,5 @@ SEVERITY_MAPPING = {
     "Irrelevante": 0
 }
 
-# Umbral de confianza (Lo bajamos un poco porque ahora tenemos Hard Keywords)
+# Umbral de confianza
 NLP_CONFIDENCE_THRESHOLD = 0.40
