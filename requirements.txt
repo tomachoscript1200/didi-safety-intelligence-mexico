@@ -1,0 +1,11 @@
+selenium
+beautifulsoup4
+pandas
+webdriver-manager
+pysentimiento[transformers]
+transformers
+torch
+python-dotenv
+tiktoken
+sentencepiece
+lxml
