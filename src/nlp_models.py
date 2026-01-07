@@ -31,7 +31,6 @@ def get_device() -> int:
 def compile_keywords_regex() -> re.Pattern:
     global _KEYWORDS_PATTERN
     if _KEYWORDS_PATTERN is None:
-        # Aplanamos la lista de hard keywords
         all_kws = [kw for sublist in HARD_KEYWORDS.values() for kw in sublist]
         sorted_kws = sorted(all_kws, key=len, reverse=True)
         pattern_str = r"\b(?:" + "|".join(re.escape(k) for k in sorted_kws) + r")\b"
@@ -120,7 +119,7 @@ def analyze_content(text: str, title: str):
         }
 
     detected_topic = "Otros temas generales"
-    topic_score = 0.0 # <-- Nueva variable
+    topic_score = 0.0 
     kw_found = "N/A" 
 
     pattern = compile_keywords_regex()
@@ -134,7 +133,7 @@ def analyze_content(text: str, title: str):
                 topic_score = 1.0 # Confianza total por keyword manual
                 break
     else:
-        # Si no hay keyword, usamos la IA y capturamos su score
+        # Si no hay keyword, usamos la IA y su score
         result = classifier(text[:400], candidate_labels=TOPIC_LABELS)
         detected_topic = result['labels'][0]
         topic_score = round(result['scores'][0], 4)
@@ -146,19 +145,16 @@ def analyze_content(text: str, title: str):
     content_lower = (title + " " + text).lower()
     
     # REGLA A: Elevación a EXTREMO (Nivel 5)
-    # Si detectamos palabras de violencia extrema, no importa el tópico base.
     if any(kw in content_lower for kw in EXTREME_VIOLENCE_KEYWORDS):
         severity_level = 5
     
     # REGLA B: Elevación a CRÍTICO (Nivel 4)
-    # Si es accidente u operativo pero detectamos fatalidades o armas
     elif severity_level < 4:
         if any(kw in content_lower for kw in FATALITY_KEYWORDS) or \
            any(kw in content_lower for kw in VIOLENCIA_ARMADA_KEYWORDS):
             severity_level = 4
 
     # REGLA C: Ajuste a MODERADO (Nivel 3)
-    # Si es un robo sin violencia reportada o una protesta con impacto vial
     elif detected_topic == "Protestas o bloqueos viales":
         severity_level = 3
 
@@ -169,7 +165,7 @@ def analyze_content(text: str, title: str):
     peso_sentimiento = SENTIMENT_NUMERIC_MAP.get(label_final, 0.0)
     sentiment_polarity = round(peso_sentimiento * score_final, 4)
 
-    # Recuperación de apps y recomendación
+    # apps y recomendación
     apps = _detect_apps(text + " " + title)
     rec = _generate_recommendation(detected_topic, label_final, score_final, text, apps)
 
@@ -187,7 +183,6 @@ def analyze_content(text: str, title: str):
     
 def calculate_didi_focus(title: str, body: str) -> float:
     didi_pattern = APP_PATTERNS_DICT["DiDi"]
-    # Usamos re.IGNORECASE para detectar Didi, DIDI, didi
     if re.search(didi_pattern, title, re.IGNORECASE):
         return FOCUS_WEIGHTS["TITLE_MATCH"]
     elif re.search(didi_pattern, body, re.IGNORECASE):
@@ -195,6 +190,6 @@ def calculate_didi_focus(title: str, body: str) -> float:
     return FOCUS_WEIGHTS["NO_MATCH"]
 
 def get_source_tier(source_raw: str) -> int:
-    # Usamos el mapeo centralizado de config.py
     clean_name = SOURCE_NAME_MAPPING.get(source_raw, "Default")
+
     return SOURCE_TIER_MAPPING.get(clean_name, SOURCE_TIER_MAPPING["Default"])
