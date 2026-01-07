@@ -27,9 +27,8 @@ class GeoResult:
         }
 
 # ============================================================
-# 🗺️ DATOS MAESTROS (Simplificado para rendimiento)
+# DATOS
 # ============================================================
-# Mantenemos tu estructura de datos pero optimizada para búsqueda inversa
 RAW_GAZETTEER = [
     # Estados (32)
     {"city": "Aguascalientes", "state": "Aguascalientes", "aliases": ["aguascalientes","ags"]},
@@ -145,33 +144,22 @@ RAW_GAZETTEER = [
     {"city": "Metepec", "state": "Estado de México", "aliases": ["metepec"]},
 ]
 
-# Mapa inverso: alias_normalizado -> [(city, state), ...]
+# Mapa inverso: alias_normalizado
 ALIAS_MAP: Dict[str, List[Tuple[str, str]]] = defaultdict(list)
 ALL_ALIASES = set()
 
 def normalize(text: str) -> str:
     """Normalización ultrarrápida usando translate."""
     if not text: return ""
-    # Quitar acentos
     s = unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode("utf-8").lower()
-    # Quitar puntuación (reemplazar por espacio para no juntar palabras)
     return re.sub(r"[^a-z0-9\s]", " ", s).strip()
 
 # Inicialización Estática (Al importar)
 def _initialize_geo_engine():
     global GEO_PATTERN, ALIAS_MAP
     
-    # 1. Construir índice invertido
-    # NOTA: En tu código real, añade aquí TODAS las entradas de tu GAZETTEER original
-    # Incluyendo las alcaldías con flag is_borough
-    
-    # Simulación de carga completa (Mapea tu lista real aquí)
-    # ...
-    
-    # Para el ejemplo, usamos RAW_GAZETTEER
     for entry in RAW_GAZETTEER:
         c, s = entry["city"], entry["state"]
-        # Añadimos ciudad y estado como alias implícitos
         all_names = entry["aliases"] + [c, s]
         for name in all_names:
             norm_name = normalize(name)
@@ -179,8 +167,7 @@ def _initialize_geo_engine():
             ALIAS_MAP[norm_name].append((c, s))
             ALL_ALIASES.add(norm_name)
 
-    # 2. Construir Regex Unificado (Aho-Corasick style via Regex Engine)
-    # Ordenamos por longitud descendente para que "baja california sur" haga match antes que "baja california"
+    # 2. Regex Unificado (Aho-Corasick style via Regex Engine)
     sorted_aliases = sorted(ALL_ALIASES, key=len, reverse=True)
     pattern_str = r'\b(?:' + '|'.join(map(re.escape, sorted_aliases)) + r')\b'
     GEO_PATTERN = re.compile(pattern_str, re.IGNORECASE)
@@ -196,7 +183,7 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
     """
     Algoritmo de scoring optimizado O(1) scan.
     """
-    # Normalización única
+    # Normalización
     title_norm = normalize(title_raw)
     text_norm = normalize(text_raw)
     
@@ -205,7 +192,7 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
     
     # 1. Scan Título
     for match in GEO_PATTERN.finditer(title_norm):
-        alias = match.group() # Ya está normalizado porque el regex se hizo con normalizados
+        alias = match.group()
         matched_locs = ALIAS_MAP.get(alias, [])
         for loc in matched_locs:
             counts[loc]["title"] += 1
@@ -220,7 +207,7 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
             if start_pos < counts[loc]["first_pos"]:
                 counts[loc]["first_pos"] = start_pos
 
-    # 3. Calcular Scores
+    # 3. Scores
     final_scores = []
     
     for loc, stats in counts.items():
@@ -230,7 +217,7 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
         if stats["title"] > 0:
             score += 3.0
             
-        if stats["first_pos"] < 300: # Lead
+        if stats["first_pos"] < 300:
             score += 2.0
             
         total_hits = stats["title"] + stats["text"]
@@ -248,7 +235,6 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
     if not final_scores:
         return GeoResult("", "", 0.0, "None", 0.0).to_dict()
 
-    # Ordenar por Score Descendente -> Prioridad CDMX -> Alfabético
     # Prioridad CDMX hardcodeada para desempate
     def sort_key(x):
         loc, sc = x
@@ -275,4 +261,5 @@ def enrich_location(title_raw: str, text_raw: str, url_raw: str = "") -> Dict:
         score=round(best_score, 2),
         confidence=bucket,
         gap=round(gap, 2)
+
     ).to_dict()
