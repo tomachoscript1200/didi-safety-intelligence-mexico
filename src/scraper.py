@@ -10,15 +10,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
-
-# Importamos constantes de config
 from src.config import USER_AGENT, TIMEOUT_LIMIT
 
 def setup_driver(headless=True):
-    """
-    Configura el driver con todas las opciones anti-detección y de rendimiento
-    que tenías en tu notebook original.
-    """
+
     options = Options()
     
     if headless:
@@ -36,8 +31,7 @@ def setup_driver(headless=True):
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # --- Preferencias de Rendimiento (Bloquea imágenes/notificaciones) ---
-    # Esto estaba en tu notebook y es CRÍTICO para la velocidad.
+    # --- Preferencias de Rendimiento ---
     prefs = {
         "profile.default_content_setting_values.notifications": 2,
         "profile.default_content_setting_values.images": 2,
@@ -50,7 +44,6 @@ def setup_driver(headless=True):
     options.add_experimental_option('useAutomationExtension', False)
 
     try:
-        # Usamos Webdriver Manager (Portable) en vez de ruta absoluta
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         
@@ -80,7 +73,6 @@ def smart_scroll(driver, max_scrolls=10, min_wait=2.5, max_wait=4.5):
             scroll_count += 1
             
             if new_height == prev_height:
-                # Si la altura no cambió, llegamos al final
                 break
             prev_height = new_height
             
@@ -96,7 +88,7 @@ def get_page_source(driver, url, wait_for_tag="body", do_scroll=False):
         logging.info(f"Navegando a: {url}")
         driver.get(url)
         
-        # Espera explícita (Robustez)
+        # Espera
         WebDriverWait(driver, TIMEOUT_LIMIT).until(
             EC.presence_of_element_located((By.TAG_NAME, wait_for_tag))
         )
@@ -104,7 +96,7 @@ def get_page_source(driver, url, wait_for_tag="body", do_scroll=False):
         # Pausa humana inicial
         time.sleep(random.uniform(2.0, 4.0)) 
         
-        # Ejecutar scroll si se solicita (útil para listados infinitos)
+        # scroll
         if do_scroll:
             smart_scroll(driver)
             
@@ -118,4 +110,5 @@ def get_page_source(driver, url, wait_for_tag="body", do_scroll=False):
         return None
     except Exception as e:
         logging.error(f"⚠️ Error desconocido cargando {url}: {e}")
+
         return None
